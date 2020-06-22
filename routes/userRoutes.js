@@ -10,7 +10,7 @@ router.get("/logout", controller.logout);
 
 router.get("/getAll", auth.tokenAuth, controller.getAll);
 router.get("/getDetails", auth.tokenAuth, controller.getDetails);
-router.put("/updProf", auth.tokenAuth, controller.updateProfile);
+router.put("/updProf", auth.tokenAuth, upload.single('prof'), controller.updateProfile);
 router.delete("/delAcc", auth.tokenAuth, controller.deleteAccount);
 
 module.exports = router;

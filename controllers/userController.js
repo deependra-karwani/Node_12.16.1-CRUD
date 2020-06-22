@@ -14,13 +14,13 @@ exports.register = (req, res) => {
 	let { name, email, mobile, username, password, fcm } = req.body;
 
 	bcrypt.genSalt(10, (err, salt) => {
-		if(err) {return responses.forbidden(res, {message: "Could not Secure Details. Please Try Again."});}
+		if(err) {return responses.forbidden(res, {message: "Could not Secure Credentials. Please Try Again."});}
 		
 		bcrypt.hash(password, salt, (err, hash) => {
-			if(err) {return responses.forbidden(res, {message: "Could not Secure Details. Please Try Again."});}
+			if(err) {return responses.forbidden(res, {message: "Could not Secure Credentials. Please Try Again."});}
 
 			let token = jwt.sign({email}, auth_pass, {expiresIn: '1h'});
-			db.query("INSERT INTO users(name, email, mobile, username, password, fcm, token, profPic) VALUES($1, $2, $3, $4, $5, $6, $7, $8)", [name, email, mobile, username, hash, fcm, token, image])
+			db.query("INSERT INTO users(name, email, mobile, username, password, fcm, token, profPic) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", [name, email, mobile, username, hash, fcm, token, image])
 			.then( (result) => {
 				if(result.rowCount) {
 					responses.successWHeaders(res, {token}, {message: "Registration Successful", userid: result.rows[0].id});
@@ -35,7 +35,7 @@ exports.register = (req, res) => {
 };
 
 exports.login = (req, res) => {
-	let { username, password } = req.body;
+	let { username, password, fcm } = req.body;
 
 	// db.query("SELECT email, password FROM users WHERE username = $1 AND token = NULL", [username]) // Single Session Only
 	db.query("SELECT id, email, password FROM users WHERE username = $1", [username])
@@ -49,7 +49,7 @@ exports.login = (req, res) => {
 				}
 
 				let token = jwt.sign({email: result.rows[0].email}, auth_pass, {expiresIn: '1h'});
-				db.query("UPDATE users SET token = $1 WHERE id = $2", [token, result.rows[0].id])
+				db.query("UPDATE users SET token = $1, fcm = $2 WHERE id = $3", [token, fcm, result.rows[0].id])
 				.then( (innerRes) => {
 					if(innerRes.rowCount) {
 						responses.successWHeaders(res, {token}, {message: "Login Successful", userid: result.rows[0].id});
@@ -72,10 +72,10 @@ exports.forgotPassword = (req, res) => {
 	// E-mail Verification for Authentication
 	let { email, password } = req.body;
 	bcrypt.genSalt(10, (err, salt) => {
-		if(err) {return responses.forbidden(res, {message: "Could not Secure Details. Please Try Again."});}
+		if(err) {return responses.forbidden(res, {message: "Could not Secure Credentials. Please Try Again."});}
 		
 		bcrypt.hash(password, salt, (err, hash) => {
-			if(err) {return responses.forbidden(res, {message: "Could not Secure Details. Please Try Again."});}
+			if(err) {return responses.forbidden(res, {message: "Could not Secure Credentials. Please Try Again."});}
 
 			db.query("UPDATE users SET password = $1 WHERE email = $2", [hash, email])
 			.then( (result) => {
@@ -124,6 +124,7 @@ exports.getAll = (req, res) => {
 };
 
 exports.getDetails = (req, res) => {
+	// db.query("SELECT profPic, name, username, email, mobile FROM users WHERE id = $1 AND token = $2", [req.query.userid, req.headers.token]) // Only own Details
 	db.query("SELECT profPic, name, username, email, mobile FROM users WHERE id = $1", [req.query.userid])
 	.then( (result) => {
 		if(result.rowCount) {
@@ -153,7 +154,7 @@ exports.updateProfile = (req, res) => {
 		if(result.rowCount) {
 			responses.success(res, {message: "Profile Updated Successfully"});
 		} else {
-			responses.success(res, {message: "Invalid Request"});
+			responses.badReq(res, {message: "Invalid Request"});
 		}
 	}).catch( (err) => {
 		responses.badReq(res, {message: "Could not Update Profile. Please Try Again."});

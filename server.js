@@ -13,8 +13,8 @@ exp.use(bodyParser.json());
 exp.use( (req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");
 	res.setHeader("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE");
-	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Origin, X-Requested-With, Accept");
-	res.setHeader("Access-Control-Expose-Headers", "");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Origin, X-Requested-With, Accept, token");
+	res.setHeader("Access-Control-Expose-Headers", "token");
 	next();
 });
 /** ~CORS */
