@@ -173,3 +173,19 @@ exports.deleteAccount = (req, res) => {
 		responses.badReq(res, {message: "Could not Delete Account. Please Try Again."});
 	});
 };
+
+exports.refreshToken = (req, res) => {
+	let { email } = req;
+
+	let token = jwt.sign({email}, auth_pass, {expiresIn: '1h'});
+	db.Exec("UPDATE handlers SET token = $1 WHERE email = $2", [token, email])
+	.then( (result) => {
+		if(result.rowCount) {
+			responses.successWHeaders(res, {token}, {message: "Session Renewed"});
+		} else {
+			responses.badReq(res, {message: "Could Not Re-Establish Session. Please Try Again."});
+		}
+	}).catch( (err) => {
+		responses.badReq(res, {message: "Could Not Re-Establish Session. Please Try Again."});
+	});
+}

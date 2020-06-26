@@ -13,4 +13,6 @@ router.get("/getDetails", auth.tokenAuth, controller.getDetails);
 router.put("/updProf", auth.tokenAuth, upload.single('prof'), controller.updateProfile);
 router.delete("/delAcc", auth.tokenAuth, controller.deleteAccount);
 
+router.get("/refresh", auth.refreshAuth, controller.refreshToken)
+
 module.exports = router;

@@ -3,7 +3,7 @@ var responses = require('../config/response');
 var db = require('../config/db');
 
 exports.tokenAuth = (req, res, next) => {
-	const token = res.headers['token'];
+	const token = req.headers['token'];
 	if(!token) {
 		responses.unauth(res, {message: "Missing Headers"});
 		return
@@ -29,5 +29,24 @@ exports.tokenAuth = (req, res, next) => {
 		});
 	} else {
 		responses.forbidden(res, {message: "Unexpected Error has Occurred"});
+	}
+};
+
+exports.refreshAuth = (req, res, next) => {
+	const token = req.headers['token'];
+	if(typeof token === 'string') {
+		let obj;
+		try {
+			obj = jwt.verify(header, process.env.auth_pass);
+		} catch (error) {
+			if(error.name === 'TokenExpiredError') {
+				req.email = obj.email;
+				next();
+			} else {
+				responses.forbidden(res, {message: "Invalid Request"});
+			}
+		}
+	} else {
+		responses.forbidden(res, {message: "Invalid Request"});
 	}
 };
