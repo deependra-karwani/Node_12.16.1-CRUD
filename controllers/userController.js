@@ -111,7 +111,7 @@ exports.logout = (req, res) => {
 
 exports.getAll = (req, res) => {
 	// db.query("SELECT profPic, name, username FROM users") // All Users
-	db.query("SELECT profPic, name, username FROM users WHERE id <> $1", [req.query.userid])
+	db.query("SELECT id, profPic, name, username FROM users WHERE id <> $1", [req.query.userid])
 	.then( (result) => {
 		if(result.rowCount) {
 			responses.success(res, {users: result.rows});
@@ -147,7 +147,7 @@ exports.updateProfile = (req, res) => {
 		let image = req.file.originalname;
 		updQuery = db.query("UPDATE users SET name = $1, username = $2, mobile = $3, profPic = $4 WHERE id = $5 AND token = $6", [name, username, mobile, image, userid, token]);
 	} else {
-		updQuery = db.query("UPDATE users SET name = $1, username = $2, mobile = $3, WHERE id = $4 AND token = $5", [name, username, mobile, userid, token]);
+		updQuery = db.query("UPDATE users SET name = $1, username = $2, mobile = $3 WHERE id = $4 AND token = $5", [name, username, mobile, userid, token]);
 	}
 
 	updQuery.then( (result) => {
@@ -178,7 +178,7 @@ exports.refreshToken = (req, res) => {
 	let { email } = req;
 
 	let token = jwt.sign({email}, auth_pass, {expiresIn: '1h'});
-	db.Exec("UPDATE handlers SET token = $1 WHERE email = $2", [token, email])
+	db.query("UPDATE handlers SET token = $1 WHERE email = $2", [token, email])
 	.then( (result) => {
 		if(result.rowCount) {
 			responses.successWHeaders(res, {token}, {message: "Session Renewed"});
